@@ -13,8 +13,13 @@ function readWagesAsArray(month, callback) {
 }
 
 function handleWages(wagesArray) {
-	var wage = calculateWageForTheDay(wagesArray[10]);
-	console.log(wage);
+  var sum = 0;
+  var wageObj = {};
+  _.map(wagesArray, function(day) {
+    if (!wageObj[day[0]]) wageObj[day[0]] = 0;
+    wageObj[day[0]] += calculateWageForTheDay(day);
+  });
+	console.log(wageObj);
 }
 
 function calculateWageForTheDay(dayArray) {
