@@ -13,6 +13,7 @@ function readWagesAsArray(month, callback) {
 }
 
 function handleWages(wagesArray) {
+  console.log(wagesArray);
   var sum = 0;
   var wageObj = {};
   _.map(wagesArray, function(day) {
@@ -30,7 +31,6 @@ function calculateWageForTheDay(dayArray) {
 	var morningMarker = moment(date + " " + "06:00", "DD-MM-YYYY HH:mm");
 	var eveningMarker = moment(date + " " + "18:00", "DD-MM-YYYY HH:mm");
 	var totalMinutes = leaving.diff(entry, 'minutes');
-
 	var timeSegments = splitMinutesToOvertimeSegments(totalMinutes);
 	var wage = 0;
 	for (var i = 0; i < timeSegments.length; i++) {
@@ -50,7 +50,11 @@ function calculateWageForSegment(begin, end, multiplierIndex, morningMarker, eve
 	var compensatedMinutes = 0;
 
 	if (morningMarker.diff(begin, 'minutes') > 0) compensatedMinutes += morningMarker.diff(begin, 'minutes');
-	if (end.diff(eveningMarker, 'minutes') > 0) compensatedMinutes += end.diff(eveningMarker, 'minutes');
+  if (begin > eveningMarker) {
+    if (end.diff(begin, 'minutes') > 0) compensatedMinutes += end.diff(begin, 'minutes');
+  } else {
+    if (end.diff(eveningMarker, 'minutes') > 0) compensatedMinutes += end.diff(eveningMarker, 'minutes');
+  }
 	var normalMinutes = end.diff(begin, 'minutes') - compensatedMinutes;
 	var compensatedHours = compensatedMinutes/60.00;
 	var normalHours = normalMinutes/60;
@@ -103,4 +107,4 @@ module.exports = {
     calculateWageForTheDay: calculateWageForTheDay
 };
 
-readWagesAsArray('03', handleWages);
+//readWagesAsArray('03', handleWages);

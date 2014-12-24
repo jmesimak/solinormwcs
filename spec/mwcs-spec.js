@@ -56,4 +56,31 @@ describe("wage properly calculated for a day", function() {
 		expect(wage).toEqual(19.9);
 	});
 
+	it("should be able to calculate the correct wage for a day with overtime but no compensation", function() {
+		var wage = mwcs.calculateWageForTheDay([ 'Janet Java', '1', '5.3.2014', '8:00', '16:30' ]);
+		expect(wage).toEqual(32.34375);
+	});
+
+	it("should be able to calculate the correct wage for a day with overtime and compensation", function() {
+		var wage = mwcs.calculateWageForTheDay([ 'Janet Java', '1', '20.3.2014', '10:00', '19:00' ]);
+		expect(wage).toEqual(36.125);
+	});
+
+	it("should be able to calculate the wage for someone who is totally bonkers and working from 10pm to 6am", function() {
+		var wage = mwcs.calculateWageForTheDay([ 'Scott Scala', '2', '24.3.2014', '22:00', '6:00' ]);
+		expect(wage).toEqual(39.2);
+	});
+	
+	it("should be able to calculate the wage for a day when the wage is doubled e.g. over 12 hours", function() {
+		// Floating point madness, this is why we use accounting later on.
+		var wage = mwcs.calculateWageForTheDay([ 'Janet Java', '1', '5.3.2014', '10:00', '01:00' ]);
+		expect(wage >= 86.35).toBeTruthy();
+	});
+
+
+	it("", function() {
+		var wage = mwcs.calculateWageForTheDay();
+		expect(wage).toEqual();
+	});
+
 });
