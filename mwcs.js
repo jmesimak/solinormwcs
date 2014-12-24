@@ -13,10 +13,13 @@ function readWagesAsArray(month, callback) {
 }
 
 function handleWages(wagesArray) {
-	console.log(wagesArray);
-
-	calculateWageForTheDay(wagesArray[11]);
-
+  var sum = 0;
+  var wageObj = {};
+  _.map(wagesArray, function(day) {
+    if (!wageObj[day[0]]) wageObj[day[0]] = 0;
+    wageObj[day[0]] += calculateWageForTheDay(day);
+  });
+	console.log(wageObj);
 }
 
 function calculateWageForTheDay(dayArray) {
@@ -26,78 +29,78 @@ function calculateWageForTheDay(dayArray) {
 	if (leaving < entry) leaving.add(1, 'days');
 	var morningMarker = moment(date + " " + "06:00", "DD-MM-YYYY HH:mm");
 	var eveningMarker = moment(date + " " + "18:00", "DD-MM-YYYY HH:mm");
+	var totalMinutes = leaving.diff(entry, 'minutes');
+
+	var timeSegments = splitMinutesToOvertimeSegments(totalMinutes);
 	var wage = 0;
-	if (entry >= morningMarker && leaving <= eveningMarker && !overtime(entry, leaving)) wage += calculateNormalWage(leaving.diff(entry, 'minutes'));
-	if ((entry < morningMarker || leaving > eveningMarker) && !overtime(entry, leaving)) wage += calculateWageWhenCompensation(entry, leaving, morningMarker, eveningMarker);
-	if (overtime(entry, leaving)) wage += 
-	console.log(wage);
+	for (var i = 0; i < timeSegments.length; i++) {
+		var begin = entry.clone();
+		begin.add(sumBeforeIndex(timeSegments, i), 'minutes');
+		var end = begin.clone();
+		end.add(timeSegments[i], 'minutes');
+		wage += calculateWageForSegment(begin, end, i, morningMarker, eveningMarker);
+	}
+	return wage;
 }
 
-function calculateWageWhenOvertime(entry, leaving, morningMarker, eveningMarker) {
+function calculateWageForSegment(begin, end, multiplierIndex, morningMarker, eveningMarker) {
+	var basewage = 3.75;
+	var compensation = 1.15;
+	var multiplierArray = [1.00, 1.25, 1.50, 2.00];
+	var compensatedMinutes = 0;
 
-	var totalMinutes = leaving.diff(entry, 'minutes');
-	var normalMinutes = 0;
-	var normalCompensatedMinutes = 0;
-	var normalTierOneMinutes = 0;
-	var normalTierTwoMinutes = 0;
-	var normalTierThreeMinutes = 0;
+	if (morningMarker.diff(begin, 'minutes') > 0) compensatedMinutes += morningMarker.diff(begin, 'minutes');
+	if (end.diff(eveningMarker, 'minutes') > 0) compensatedMinutes += end.diff(eveningMarker, 'minutes');
+	var normalMinutes = end.diff(begin, 'minutes') - compensatedMinutes;
+	var compensatedHours = compensatedMinutes/60.00;
+	var normalHours = normalMinutes/60;
+	var wage = 0;
+	wage += compensatedHours * (basewage + compensation) * multiplierArray[multiplierIndex];
+	wage += normalHours * basewage * multiplierArray[multiplierIndex];
+	return wage;
+}
 
-	var mornDiff =morningMarker.diff(entry, 'minutes');
+function sumBeforeIndex(array, index) {
+	var sum = 0;
+	for (var i = 0; i < index; i++) {
+		sum += array[i];
+	}
+	return sum;
+}
 
-	function splitMinutesToOvertimeSegments(minutes) {
-		var segments = [];
-		if (minutes <= 480) {
-			segments.push(minutes);
-			return segments;
-		}
-		segments.push(480);
-		var leftover = minutes - 480;
-		// 25%
-		if (leftover <= 120) {
-			segments.push(leftover);
-			return segments;
-		}
-
-		segments.push(120);
-		leftover -= 120;
-		// 50%
-		if (leftover <= 120) {
-			segments.push(leftover);
-			return segments;
-		}
-
-		segments.push(120);
-		// 100%
-		leftover -= 120;
+function splitMinutesToOvertimeSegments(minutes) {
+	var segments = [];
+	if (minutes <= 480) {
+		segments.push(minutes);
+		return segments;
+	}
+	segments.push(480);
+	var leftover = minutes - 480;
+	// 25%
+	if (leftover <= 120) {
 		segments.push(leftover);
 		return segments;
 	}
 
-}
-
-function overtime(entry, leaving) {
-	return leaving.diff(entry, 'minutes') > 800;
-}
-
-function calculateNormalWage(minutes) {
-	return minutes / 60 * 3.75;
-}
-
-
-function calculateWageWhenCompensation(entry, leaving, morningMarker, eveningMarker) {
-	var normalMins = leaving.diff(entry, 'minutes');
-	var compMins = 0;
-	var diffMornMins = morningMarker.diff(entry, 'minutes');
-	var diffEveningMins = leaving.diff(eveningMarker, 'minutes');
-	if (diffMornMins > 0) {
-		compMins += diffMornMins;
-		normalMins -= diffMornMins;
+	segments.push(120);
+	leftover -= 120;
+	// 50%
+	if (leftover <= 120) {
+		segments.push(leftover);
+		return segments;
 	}
-	if (diffEveningMins > 0) {
-		compMins += diffEveningMins;
-		normalMins -= diffEveningMins;
-	}
-	return compMins/60*4.90+calculateNormalWage(normalMins);
+
+	segments.push(120);
+	// 100%
+	leftover -= 120;
+	segments.push(leftover);
+	return segments;
 }
+
+module.exports = {
+    splitMinutesToOvertimeSegments: splitMinutesToOvertimeSegments,
+    sumBeforeIndex: sumBeforeIndex,
+    calculateWageForTheDay: calculateWageForTheDay
+};
 
 readWagesAsArray('03', handleWages);
