@@ -1,0 +1,20 @@
+<html ng-app="mwcsApp">
+<head>
+	<title>Monthly Wage Calculation System</title>
+</head>
+<body ng-controller="demoCtrl">
+
+	<select ng-model="month" ng-change="getWages(month)">
+    <option value="" disabled selected>Select a month</option>
+    <option ng-repeat="m in availables" value="{{m}}">{{m}}</option>
+  </select>
+
+  <h2 ng-if="month">Wages for: {{month}}</h2>
+  <ul>
+    <li ng-repeat="(person, wage) in wageObject">{{person}}: {{wage}}</li>
+  </ul>
+
+	<script src="js/angular.min.js"></script>
+	<script src="js/mwcs-ng.js"></script>
+</body>
+</html>
