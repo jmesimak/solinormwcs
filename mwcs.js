@@ -4,6 +4,10 @@ var _ = require('lodash');
 var accounting = require('accounting');
 var moment = require('moment');
 
+var OVERTIME_MULTIPLIERS = [1.25, 1.50, 2.00];
+var BASEWAGE = 3.75;
+var COMPENSATION = 1.15;
+
 function getWagesForMonth(year, month, callback) {
   readWagesAsArray(year, month, function(data) {
     callback(handleWages(data));
@@ -21,6 +25,7 @@ function readWagesAsArray(year, month, callback) {
 function handleWages(wagesArray) {
   var sum = 0;
   var wageObj = {};
+  
   _.map(wagesArray, function(day) {
     if (!wageObj[day[0]]) wageObj[day[0]] = 0;
     wageObj[day[0]] += calculateWageForTheDay(day);
@@ -53,20 +58,31 @@ function eveningPay(time) {
 
 function getMultiplier(i) {
     var multiplier = 1;
-    if (i > 32) multiplier = 1.25;
-    if (i > 40) multiplier = 1.50;
-    if (i > 48) multiplier = 2.00;
+    if (i > 32) multiplier = OVERTIME_MULTIPLIERS[0];
+    if (i > 40) multiplier = OVERTIME_MULTIPLIERS[1];
+    if (i > 48) multiplier = OVERTIME_MULTIPLIERS[2];
     return multiplier;
 }
 
+/*
+* Recursively calculate the total wage for a given work shift in 15 minute increments.
+*/
 function totrec(begin, total, date, wage, i) {
   if (i <= total/15) {
     var comp = eveningPay(begin);
-    return totrec(begin.add(15, "minutes"), total, date, wage += 0.25*(3.75+(comp*1.15))*getMultiplier(i), i+1);
+    return totrec(begin.add(15, "minutes"), 
+                  total, 
+                  date, 
+                  wage += 0.25*(BASEWAGE+(comp*COMPENSATION))*getMultiplier(i), 
+                  i+1);
   }
   return wage;
 }
 
+/*
+* getWagesForMonth is the primary interface for the web server.
+* calculateWageForTheDay is exported for testing purposes (jasmine-node).
+*/
 module.exports = {
     calculateWageForTheDay: calculateWageForTheDay,
     getWagesForMonth: getWagesForMonth
