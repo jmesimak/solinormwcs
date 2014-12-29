@@ -4,12 +4,12 @@ A prototypish full-stack application for parsing .csv-files that contain the wor
 
 ## Technologies used
 Node.JS with the following modules:
-    - Moment.js for better time handling
-    - accounting.js for basic currency handling
-    - Express as a minimalist web framework
-    - Jasmine-Node for testing
-    - node-csv to help with parsing the csv
-    - Lo-Dash because it's neat
+- Moment.js for better time handling
+- accounting.js for basic currency handling
+- Express as a minimalist web framework
+- Jasmine-Node for testing
+- node-csv to help with parsing the csv
+- Lo-Dash because it's neat
 
 As a cherry on top, Angular for the front-end.
 
