@@ -8,12 +8,20 @@ var OVERTIME_MULTIPLIERS = [1.25, 1.50, 2.00];
 var BASEWAGE = 3.75;
 var COMPENSATION = 1.15;
 
+/*
+* Primary interface for this program. It takes string arguments in the form of '2014', '03',
+* and the callback function will return the data as an object, use it like so:
+* function(data) { doStuffWithData(data); }
+*/
 function getWagesForMonth(year, month, callback) {
   readWagesAsArray(year, month, function(data) {
     callback(handleWages(data));
   });
 }
 
+/*
+* Parsing the csv asynchronously.
+*/
 function readWagesAsArray(year, month, callback) {
 	fs.readFile('monthly_wages/HourList'+year+month+'.csv', 'utf8', function(err, data) {
     csv.parse(data, function(err, wages) {
@@ -51,6 +59,9 @@ function calculateWageForTheDay(dayArray) {
 	return totrec(entry, totalMinutes, date, 0, 1);
 }
 
+/*
+* Find out if the time is between 18:00 and 05:59.
+*/
 function eveningPay(time) {
   var date = time.get("date")+"."+(time.get("month")+1)+"."+time.get("year");
   return time < createDate(date, "06:00") || time >= createDate(date, "18:00");
